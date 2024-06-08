@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Nexus Mods Modlist",
+  "version": "1.0",
+  "description": "An extension to create and manage your Nexus Mods modlist.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://www.nexusmods.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
