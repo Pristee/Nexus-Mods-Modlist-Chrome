@@ -1,1 +1,1 @@
-# Nexus-Mods-Modlist-Chrome
+Installation through 'chrome://extensions', enable 'Developer mode' into 'Load unpacked '.
