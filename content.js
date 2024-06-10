@@ -36,6 +36,20 @@
     downloadButton.style.height = '34.1833px';
     downloadButton.style.fontFamily = 'Roboto, sans-serif';
     downloadButton.style.fontWeight = '450';
+    downloadButton.style.display = 'none';
+
+    let clearButton = document.createElement('button');
+    clearButton.innerText = 'CLEAR MODLIST';
+    clearButton.style.backgroundColor = 'var(--theme-primary)';
+    clearButton.style.color = 'white';
+    clearButton.style.fontSize = '12px';
+    clearButton.style.border = 'none';
+    clearButton.style.height = '34.1833px';
+    clearButton.style.fontFamily = 'Roboto, sans-serif';
+    clearButton.style.fontWeight = '450';
+    clearButton.style.marginRight = '8px';
+    clearButton.style.marginLeft = '8px';
+    clearButton.style.display = 'none';
 
     async function scrapeModData() {
         let titreElement = document.querySelector('meta[property="og:title"]');
@@ -58,7 +72,7 @@
 
     async function checkIfModInList() {
         let modData = await scrapeModData();
-        chrome.storage.local.get('modList', function(data) {
+        browser.storage.local.get('modList', function(data) {
             let modList = data.modList || [];
             if (modList.some(mod => mod.url_du_mod === modData.url_du_mod)) {
                 removeButton.style.display = 'inline-block';
@@ -66,43 +80,47 @@
         });
     }
 
-    function checkDownloadButton() {
-        chrome.storage.local.get('modList', function(data) {
+    function updateButtonsVisibility() {
+        browser.storage.local.get('modList', function(data) {
             let modList = data.modList || [];
             if (modList.length > 0) {
                 downloadButton.style.display = 'inline-block';
+                clearButton.style.display = 'inline-block';
+            } else {
+                downloadButton.style.display = 'none';
+                clearButton.style.display = 'none';
             }
         });
     }
 
     addButton.addEventListener('click', async function() {
         let modData = await scrapeModData();
-        chrome.storage.local.get('modList', function(data) {
+        browser.storage.local.get('modList', function(data) {
             let modList = data.modList || [];
             if (!modList.some(mod => mod.url_du_mod === modData.url_du_mod)) {
                 modList.push(modData);
-                chrome.storage.local.set({ modList: modList });
+                browser.storage.local.set({ modList: modList });
                 removeButton.style.display = 'inline-block';
-                checkDownloadButton();
+                updateButtonsVisibility();
             }
         });
     });
 
     removeButton.addEventListener('click', async function() {
         let modData = await scrapeModData();
-        chrome.storage.local.get('modList', function(data) {
+        browser.storage.local.get('modList', function(data) {
             let modList = data.modList || [];
             modList = modList.filter(mod => mod.url_du_mod !== modData.url_du_mod);
-            chrome.storage.local.set({ modList: modList });
+            browser.storage.local.set({ modList: modList });
             removeButton.style.display = 'none';
-            checkDownloadButton();
+            updateButtonsVisibility();
         });
     });
 
     downloadButton.addEventListener('click', function() {
-        chrome.storage.local.get('modList', function(data) {
+        browser.storage.local.get('modList', function(data) {
             let modList = data.modList || [];
-            let csvContent = modList.map(mod => `${mod.categorie},${mod.nom_du_mod},${mod.url_du_mod}`).join('\n') + '\n';
+            let csvContent = modList.map(mod => `${mod.categorie}¤${mod.nom_du_mod}¤${mod.url_du_mod}`).join('\n') + '\n';
 
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             let url = URL.createObjectURL(blob);
@@ -115,6 +133,13 @@
         });
     });
 
+    clearButton.addEventListener('click', function() {
+        browser.storage.local.set({ modList: [] });
+        removeButton.style.display = 'none';
+        downloadButton.style.display = 'none';
+        clearButton.style.display = 'none';
+    });
+
     function injectButtons() {
         let actionManual = document.getElementById('action-manual');
         let modActions = document.querySelector('ul.modactions');
@@ -122,12 +147,13 @@
             actionManual.parentNode.insertBefore(addButton, actionManual.nextSibling);
             actionManual.parentNode.insertBefore(removeButton, addButton.nextSibling);
             actionManual.parentNode.insertBefore(downloadButton, removeButton.nextSibling);
+            actionManual.parentNode.insertBefore(clearButton, downloadButton.nextSibling);
         }
     }
 
     if (isModPage()) {
         injectButtons();
         checkIfModInList();
-        checkDownloadButton();
+        updateButtonsVisibility();
     }
 })();
